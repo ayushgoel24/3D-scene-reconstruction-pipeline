@@ -1,0 +1,3 @@
+3DReconstructionFrom2D:
+  leftImagePath: "data/0014_2.png"
+  rightImagePath: "data/0017_2.png"
