@@ -2,20 +2,20 @@
 
 The entire pipeline is composed of various parts.
 
-1) Using Optical Flow to get Point Correspondences and estimate Depths.
+## 1) Using Optical Flow to get Point Correspondences and estimate Depths.
 
 Optical flow is computed over a small window. The smallest singular value of spatiotemporal derivative matrix is calculated and the pixels above a certain threshold value are considered. 
 
-Flow Vectors:
+### **Flow Vectors:** <br/>
 ![Alt text](output/opticalflow/flow_10.png)
 
-Epipoles after RANSAC and satisfying planar condition equation by a threshold
+### **Epipoles after RANSAC and satisfying planar condition equation by a threshold:**  <br/>
 ![Alt text](output/opticalflow/epipole_10.png)
 
-Depths are then calculated by assuming pure translational motion
+### **Depths are then calculated by assuming pure translational motion:**  <br/>
 ![Alt text](output/opticalflow/depth_10.png)
 
-2) Reconstruction of 3d scene from 2 views using 2 view sfm
+## 2) Reconstruction of 3d scene from 2 views using 2 view sfm
 
 We first identify important features using SIFT -
 ![Alt text](3D-reconstruction-from-2D-images/Results/SIFT-points.png)
@@ -30,7 +30,7 @@ The resulting epipolar lines are as follows
 Finally we reproject the points of one image onto the other
 ![Alt text](3D-reconstruction-from-2D-images/Results/Reprojection.png)
 
-3) Lastly we recreate the 3D model from multi view sfm
+## 3) Lastly we recreate the 3D model from multi view sfm
 
 Input views - 
 ![Alt text](Reconstruction-from-Multi-view-stereo/Results/Input-views.png)
