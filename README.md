@@ -35,23 +35,24 @@ Optical flow is computed over a small window. The smallest singular value of spa
 ![Alt text](output/2viewSFM/reprojection_left_image.png)
 ![Alt text](output/2viewSFM/reprojection_right_image.png)
 
-## 3) Lastly we recreate the 3D model from multi view sfm
+<br/>
 
-Input views - 
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Input-views.png)
+## 3) Recreate 3D Model from multi-view SFM
 
-Disparity -
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Disparity.png)
+### **Input views**: <br/>
+![Alt text](output/multiviewSFM/input_images.png)
 
-Disparity and depth after post processing -
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Postproc-Disparity-and-depth.png)
+### **Disparity**: <br/>
+![Alt text](output/multiviewSFM/disparity.png)
 
-L-R Consistency check mask -
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/L-R-Consistency-Check-Mask.png)
+### **Disparity and depth after post processing**: <br/>
+![Alt text](output/multiviewSFM/disparity_after_postprocessing.png)
+
+### **L-R Consistency check mask**: <br/>
+![Alt text](output/multiviewSFM/lr_consistency_check.png)
 
 Reconstructed 3d model from 2 views using ZNCC Kernel -
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Reconstructed-3d-model-ZNCC.png)
+![Alt text](output/multiviewSFM/zncc.png)
 
 Entire Reconstructed 3d model
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Reconstructed-3d-model.png)
-![Alt text](Reconstruction-from-Multi-view-stereo/Results/Reconstructed-3d-model2.png)
+![Alt text](output/multiviewSFM/fullView.png)
