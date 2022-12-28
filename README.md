@@ -15,20 +15,25 @@ Optical flow is computed over a small window. The smallest singular value of spa
 ### **Depths are then calculated by assuming pure translational motion:**  <br/>
 ![Alt text](output/opticalflow/depth_10.png)
 
-## 2) Reconstruction of 3d scene from 2 views using 2 view sfm
+<br/>
 
-We first identify important features using SIFT -
-![Alt text](3D-reconstruction-from-2D-images/Results/SIFT-points.png)
+## 2) Reconstruction of 3D scene from 2 views using 2-view SFM
 
-We then match key points using both least square and RANSAC to prove effectiveness of ransac -
-![Alt text](3D-reconstruction-from-2D-images/Results/Key-pts-using-lst-sq.png)
-![Alt text](3D-reconstruction-from-2D-images/Results/Key-pts-using-RANSAC.png)
+### **Feature identification using SIFT**:
+![Alt text](output/2viewSFM/sift_features_in_left_image.png)
+![Alt text](output/2viewSFM/sift_features_in_right_image.png)
 
-The resulting epipolar lines are as follows 
-![Alt text](3D-reconstruction-from-2D-images/Results/Epipolar-lines.png)
+### **Key point matching using Least Squares and RANSAC**:
+![Alt text](output/2viewSFM/lse_matches.png)
+![Alt text](output/2viewSFM/ransac_matches.png)
 
-Finally we reproject the points of one image onto the other
-![Alt text](3D-reconstruction-from-2D-images/Results/Reprojection.png)
+### **Resulting Epipolar lines**:
+![Alt text](output/2viewSFM/epipoles_left_image.png)
+![Alt text](output/2viewSFM/epipoles_right_image.png)
+
+### **Reprojection of points of one image onto the other**:
+![Alt text](output/2viewSFM/reprojection_left_image.png)
+![Alt text](output/2viewSFM/reprojection_right_image.png)
 
 ## 3) Lastly we recreate the 3D model from multi view sfm
 
