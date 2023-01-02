@@ -5,3 +5,11 @@
     u0: 307.5
     v0: 205
     outputDirectory: "output/2viewSFM/"
+
+OpticalFlow:
+    dataDirectory: "data/opticalflow/"
+    threshold: 10
+    plotFlow: True
+    findEpipoles: True
+    computeDepth: True
+    computePlanarFlow: True
