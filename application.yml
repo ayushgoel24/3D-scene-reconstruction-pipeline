@@ -13,3 +13,6 @@ OpticalFlow:
     findEpipoles: True
     computeDepth: True
     computePlanarFlow: True
+
+Stereo:
+    dataDirectory: "data/multiviewstereo/"
