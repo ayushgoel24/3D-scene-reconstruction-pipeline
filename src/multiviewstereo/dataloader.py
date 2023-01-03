@@ -6,7 +6,8 @@ import imageio
 
 class DataLoader( object ):
     
-    def load_middlebury_data(datadir):
+    @staticmethod
+    def load_middlebury_data( datadir ):
         """
         "imgname.png k11 k12 k13 k21 k22 k23 k31 k32 k33 r11 r12 r13 r21 r22 r23 r31 r32 r33 t1 t2 t3"
             The projection matrix for that image is given by K*[R t]
