@@ -303,3 +303,117 @@ class TwoViewStereo( object ):
         xyz_cam = np.dstack( ( (u - K[0, 2]) * dep_map / K[0, 0], (v - K[1, 2]) * dep_map / K[1, 1], dep_map ) )
 
         return dep_map, xyz_cam
+
+    @staticmethod
+    def postprocess(
+        dep_map,
+        rgb,
+        xyz_cam,
+        R_wc,
+        T_wc,
+        consistency_mask=None,
+        hsv_th=45,
+        hsv_close_ksize=11,
+        z_near=0.45,
+        z_far=0.65,
+    ):
+        """
+        Your goal in this function is:
+        given pcl_cam [N,3], R_wc [3,3] and T_wc [3,1]
+        compute the pcl_world with shape[N,3] in the world coordinate
+        """
+
+        # extract mask from rgb to remove background
+        mask_hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)[..., -1]
+        mask_hsv = (mask_hsv > hsv_th).astype(np.uint8) * 255
+        # imageio.imsave("./debug_hsv_mask.png", mask_hsv)
+        morph_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (hsv_close_ksize, hsv_close_ksize))
+        mask_hsv = cv2.morphologyEx(mask_hsv, cv2.MORPH_CLOSE, morph_kernel).astype(float)
+        # imageio.imsave("./debug_hsv_mask_closed.png", mask_hsv)
+
+        # constraint z-near, z-far
+        mask_dep = ((dep_map > z_near) * (dep_map < z_far)).astype(float)
+        # imageio.imsave("./debug_dep_mask.png", mask_dep)
+
+        mask = np.minimum(mask_dep, mask_hsv)
+        if consistency_mask is not None:
+            mask = np.minimum(mask, consistency_mask)
+        # imageio.imsave("./debug_before_xyz_mask.png", mask)
+
+        # filter xyz point cloud
+        pcl_cam = xyz_cam.reshape(-1, 3)[mask.reshape(-1) > 0]
+        o3d_pcd = o3d.geometry.PointCloud()
+        o3d_pcd.points = o3d.utility.Vector3dVector(pcl_cam.reshape(-1, 3).copy())
+        cl, ind = o3d_pcd.remove_statistical_outlier(nb_neighbors=10, std_ratio=2.0)
+        _pcl_mask = np.zeros(pcl_cam.shape[0])
+        _pcl_mask[ind] = 1.0
+        pcl_mask = np.zeros(xyz_cam.shape[0] * xyz_cam.shape[1])
+        pcl_mask[mask.reshape(-1) > 0] = _pcl_mask
+        mask_pcl = pcl_mask.reshape(xyz_cam.shape[0], xyz_cam.shape[1])
+        # imageio.imsave("./debug_pcl_mask.png", mask_pcl)
+        mask = np.minimum(mask, mask_pcl)
+        # imageio.imsave("./debug_final_mask.png", mask)
+
+        pcl_cam = xyz_cam.reshape(-1, 3)[mask.reshape(-1) > 0]
+        pcl_color = rgb.reshape(-1, 3)[mask.reshape(-1) > 0]
+
+        pcl_world = ( ( R_wc.T @ pcl_cam.T ) - ( R_wc.T @ T_wc ) ).T
+
+        # np.savetxt("./debug_pcl_world.txt", np.concatenate([pcl_world, pcl_color], -1))
+        # np.savetxt("./debug_pcl_rect.txt", np.concatenate([pcl_cam, pcl_color], -1))
+
+        return mask, pcl_world, pcl_cam, pcl_color
+
+    @staticmethod
+    def two_view(view_i, view_j, k_size=5, kernel_func=ssd_kernel):
+        # Full pipeline
+
+        # * 1. rectify the views
+        R_wi, T_wi = view_i["R"], view_i["T"][:, None]  # p_i = R_wi @ p_w + T_wi
+        R_wj, T_wj = view_j["R"], view_j["T"][:, None]  # p_j = R_wj @ p_w + T_wj
+
+        R_ji, T_ji, B = TwoViewStereo.compute_right2left_transformation(R_wi, T_wi, R_wj, T_wj)
+        assert T_ji[1, 0] > 0, "here we assume view i should be on the left, not on the right"
+
+        R_irect = TwoViewStereo.compute_rectification_R(T_ji)
+
+        rgb_i_rect, rgb_j_rect, K_i_corr, K_j_corr = TwoViewStereo.rectify_2view(
+            view_i["rgb"],
+            view_j["rgb"],
+            R_irect,
+            R_irect @ R_ji,
+            view_i["K"],
+            view_j["K"],
+            u_padding=20,
+            v_padding=20,
+        )
+
+        # * 2. compute disparity
+        assert K_i_corr[1, 1] == K_j_corr[1, 1], "This hw assumes the same focal Y length"
+        assert (K_i_corr[0] == K_j_corr[0]).all(), "This hw assumes the same K on X dim"
+        assert (
+            rgb_i_rect.shape == rgb_j_rect.shape
+        ), "This hw makes rectified two views to have the same shape"
+        disp_map, consistency_mask = TwoViewStereo.compute_disparity_map(
+            rgb_i_rect,
+            rgb_j_rect,
+            d0=K_j_corr[1, 2] - K_i_corr[1, 2],
+            k_size=k_size,
+            kernel_func=kernel_func,
+        )
+
+        # * 3. compute depth map and filter them
+        dep_map, xyz_cam = TwoViewStereo.compute_dep_and_pcl(disp_map, B, K_i_corr)
+
+        mask, pcl_world, pcl_cam, pcl_color = TwoViewStereo.postprocess(
+            dep_map,
+            rgb_i_rect,
+            xyz_cam,
+            R_wc=R_irect @ R_wi,
+            T_wc=R_irect @ T_wi,
+            consistency_mask=consistency_mask,
+            z_near=0.5,
+            z_far=0.6,
+        )
+
+        return pcl_world, pcl_color, disp_map, dep_map
